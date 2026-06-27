@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Advanced Phishing Mail Detector</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ══ TOPBAR ══ -->
+  <header class="topbar">
+      <div class="topbar-left">
+        <div class="brand-block">
+        <img class="brand-logo" src="{{ url_for('static', filename='logo.svg') }}" alt="Advanced Phishing Mail Detector logo">
+        <div>
+          <div class="brand-title">Advanced Phishing Mail Detector</div>
+          <div class="brand-sub">Email threat analysis &amp; IOC extraction</div>
+        </div>
+      </div>
+      <nav class="tab-nav" aria-label="Primary navigation">
+        <button class="tab-btn is-active" type="button" data-tab="overview">Overview</button>
+        <button class="tab-btn"           type="button" data-tab="analysis">Analysis</button>
+      </nav>
+    </div>
+    <div class="topbar-right">
+      <div class="analysis-controls" id="analysis-controls" aria-live="polite">
+        <button class="btn-primary btn-compact" id="top-upload-btn" type="button">Upload .eml</button>
+        <div class="file-switcher">
+          <button class="file-switcher-btn" id="file-switcher-btn" type="button">
+            <span class="file-switcher-label" id="file-switcher-label">No report yet</span>
+            <span class="file-switcher-caret" aria-hidden="true">
+              <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+          </button>
+          <div class="file-switcher-menu" id="file-switcher-menu"></div>
+        </div>
+        <button class="file-delete-btn" id="file-delete-btn" type="button" title="Delete selected report" aria-label="Delete selected report">
+          <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <path d="M4 7h16" />
+            <path d="M10 11v6" />
+            <path d="M14 11v6" />
+            <path d="M6 7l1 14h10l1-14" />
+            <path d="M9 7V4h6v3" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ═══════════════════════════════════════════
+         OVERVIEW TAB
+         ═══════════════════════════════════════════ -->
+    <section id="tab-overview" class="tab-panel is-active">
+
+      <!-- Hero -->
+      <div class="hero-band">
+        <div class="hero-copy">
+          <p class="eyebrow">Email Threat Intelligence</p>
+          <h1>Detect phishing before anyone <em>acts on it.</em></h1>
+          <p class="hero-text">
+            Upload any <code>.eml</code> file and get a full forensic breakdown — sender authentication,
+            header anomalies, URL inspection, attachment hashing, VirusTotal enrichment, and
+            technical IOC extraction — all in one structured dashboard.
+          </p>
+          <div class="hero-actions">
+            <button class="cta-primary" type="button" data-open-analysis>Open Analyzer</button>
+            <button class="cta-secondary" type="button" data-open-latest>See Example Report ↓</button>
+            <span class="local-badge">Static local analysis by default</span>
+          </div>
+        </div>
+
+        <!-- Sample threat panel -->
+        <div class="threat-panel" aria-label="Sample analysis summary">
+          <div class="panel-titlebar">
+            <div class="tbar-dots">
+              <span class="tbar-dot" style="background:#ff5f56"></span>
+              <span class="tbar-dot" style="background:#ffbd2e"></span>
+              <span class="tbar-dot" style="background:#27c93f"></span>
+            </div>
+            <span class="tbar-label">Invoice_2025_Payment.eml</span>
+          </div>
+          <div class="panel-verdict-bar">
+            <span>Phishing Score: 10 / 10</span>
+            <span class="verdict-chip unsafe">UNSAFE</span>
+          </div>
+          <div class="meter-track"><div class="meter-fill fill-unsafe" style="width:100%"></div></div>
+          <div class="panel-signal"><span>Reply-To mismatch</span><span class="signal-val bad">[!!] DETECTED</span></div>
+          <div class="panel-signal"><span>SPF / DKIM / DMARC</span><span class="signal-val ok">[OK] ALL PASS</span></div>
+          <div class="panel-signal"><span>Attachment VT scan</span><span class="signal-val bad">1 of 76 engines flagged</span></div>
+          <div class="panel-signal"><span>Pressure language</span><span class="signal-val warn">[i] DETECTED</span></div>
+          <div class="panel-signal"><span>Domain age</span><span class="signal-val ok">10,111 days</span></div>
+          <div class="panel-signal"><span>IOCs extracted</span><span class="signal-val ok">7 observables</span></div>
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="metric-strip" aria-label="Core metrics">
+        <div>
+          <div class="metric-val">0–10</div>
+          <div class="metric-lbl">Risk scale · instant severity</div>
+        </div>
+        <div>
+          <div class="metric-val">3</div>
+          <div class="metric-lbl">Verdict tiers · SAFE → UNSAFE</div>
+        </div>
+        <div>
+          <div class="metric-val">6+</div>
+          <div class="metric-lbl">Signal layers · auth, URLs, IOCs</div>
+        </div>
+        <div>
+          <div class="metric-val">JSON</div>
+          <div class="metric-lbl">Case export · ready for SIEM</div>
+        </div>
+      </div>
+
+      <!-- Reading guide -->
+      <section class="guide-band" aria-label="Reading the result">
+        <div class="guide-intro">
+          <p class="section-label">Reading the Result</p>
+          <h2>Know the outcome in seconds</h2>
+          <p>Verdicts and prefixes stay consistent across every report so teams can triage quickly.</p>
+          <div class="guide-notes">
+            <span>Score: 0-3 low · 4-6 moderate · 7-10 high</span>
+            <span><span style="color:var(--red)">[!!]</span> Critical &nbsp; <span style="color:var(--amber)">[i]</span> Warning &nbsp; <span style="color:var(--green)">[OK]</span> Positive</span>
+          </div>
+        </div>
+        <div class="guide-grid">
+          <div class="guide-card">
+            <div class="guide-verdict"><span class="guide-dot" style="background:var(--green)"></span>SAFE</div>
+            <p>No major risk factor detected by the configured checks. Still review flagged warnings.</p>
+          </div>
+          <div class="guide-card">
+            <div class="guide-verdict"><span class="guide-dot" style="background:var(--amber)"></span>CAUTIOUS</div>
+            <p>Warning signs present. The message needs human review before any action is taken.</p>
+          </div>
+          <div class="guide-card">
+            <div class="guide-verdict"><span class="guide-dot" style="background:var(--red)"></span>UNSAFE</div>
+            <p>High-risk indicators found. Do not click links or open attachments. Quarantine immediately.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Capabilities -->
+      <div class="overview-body">
+        <section class="content-section">
+          <div class="section-intro">
+            <p class="section-label">What It Analyzes</p>
+            <h2>Every layer of the email - fully exposed</h2>
+            <p>The detector goes beyond simple header checks. It parses every technical layer,
+              cross-references against VirusTotal, extracts IOCs, and explains every finding
+              in plain language.</p>
+          </div>
+          <div class="capability-list">
+            <div class="cap-card">
+              <strong>Authentication &amp; Header Forensics</strong>
+              <span>Validates SPF, DKIM, and DMARC with alignment checks. Detects Reply-To/Return-Path mismatches, display name spoofing, and traces the full received-hop chain with IPs.</span>
+              <div class="cap-tags">
+                <span class="cap-tag auth">SPF</span>
+                <span class="cap-tag auth">DKIM</span>
+                <span class="cap-tag auth">DMARC</span>
+                <span class="cap-tag auth">Alignment</span>
+                <span class="cap-tag auth">Hop Path</span>
+              </div>
+            </div>
+            <div class="cap-card">
+              <strong>URL Inspection</strong>
+              <span>Extracts, defangs, and analyzes all URLs from HTML body and text. Checks host reputation, deception indicators, redirect chains, and QR code embedded links from images.</span>
+              <div class="cap-tags">
+                <span class="cap-tag url">Defanged output</span>
+                <span class="cap-tag url">QR decode</span>
+                <span class="cap-tag url">Redirect chain</span>
+                <span class="cap-tag url">VirusTotal</span>
+              </div>
+            </div>
+            <div class="cap-card">
+              <strong>Attachment Analysis</strong>
+              <span>Detects true file types (not just extensions), computes SHA-256 hashes, scans for embedded URLs, macros, and submits to VirusTotal.</span>
+              <div class="cap-tags">
+                <span class="cap-tag att">SHA-256</span>
+                <span class="cap-tag att">Type detection</span>
+                <span class="cap-tag att">Macro check</span>
+                <span class="cap-tag att">VirusTotal</span>
+              </div>
+            </div>
+            <div class="cap-card">
+              <strong>Technical IOC Extraction</strong>
+              <span>Pulls every observable - emails, domains, IPs, URLs, file hashes - tagged with their source and VirusTotal reputation, ready for SIEM ingestion or case filing.</span>
+              <div class="cap-tags">
+                <span class="cap-tag ioc">EMAIL</span>
+                <span class="cap-tag ioc">DOMAIN</span>
+                <span class="cap-tag ioc">IP</span>
+                <span class="cap-tag ioc">URL</span>
+                <span class="cap-tag ioc">SHA256</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="content-section">
+          <p class="section-label">Who It Helps</p>
+          <h2>One tool. Three audiences.</h2>
+          <div class="role-grid">
+            <article class="role-card">
+              <span class="role-kicker k-lead">Leadership</span>
+              <h3>Clear risk posture</h3>
+              <p>A single verdict with score and signal count gives executives what they need without forcing them through raw MIME headers or XML logs.</p>
+            </article>
+            <article class="role-card">
+              <span class="role-kicker k-sec">Security Analyst</span>
+              <h3>Forensic depth</h3>
+              <p>Authentication alignment, received-hop chain, per-URL VirusTotal results, SHA-256 hashes, and IOCs with source attribution - everything an IR analyst needs fast.</p>
+            </article>
+            <article class="role-card">
+              <span class="role-kicker k-train">Fresher / Training</span>
+              <h3>Explainable findings</h3>
+              <p>Plain-language feedback with critical, warning, and positive levels shows exactly why each finding is flagged, building investigation intuition over time.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="content-section">
+          <p class="section-label">How To Use It</p>
+          <h2>Four steps from email sample to filed report</h2>
+          <div class="workflow-grid">
+            <div class="workflow-step">
+              <span class="step-num">01</span>
+              <strong>Export the email</strong>
+              <p>Save the suspicious message as an <code>.eml</code> file from the mail client or helpdesk case.</p>
+            </div>
+            <div class="workflow-step">
+              <span class="step-num">02</span>
+              <strong>Upload &amp; configure</strong>
+              <p>Drag-and-drop the file. Enable external enrichment or redirect resolution if configured.</p>
+            </div>
+            <div class="workflow-step">
+              <span class="step-num">03</span>
+              <strong>Review all evidence</strong>
+              <p>Inspect the verdict, authentication state, URL analysis, attachments, IOCs, and received path.</p>
+            </div>
+            <div class="workflow-step">
+              <span class="step-num">04</span>
+              <strong>Export the report</strong>
+              <p>Download the full JSON report for documentation, SIEM ingestion, or leadership briefings.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section><!-- /overview -->
+
+
+    <!-- ═══════════════════════════════════════════
+         ANALYSIS TAB
+         ═══════════════════════════════════════════ -->
+    <section id="tab-analysis" class="tab-panel">
+      <div class="analysis-dashboard">
+        <div class="analysis-header">
+          <div>
+            <p class="section-label">Analysis</p>
+            <h2>Investigation dashboard</h2>
+            <p>Review verdicts, authentication, URLs, attachments, and extracted observables for the selected case.</p>
+          </div>
+        </div>
+
+        <section class="result-state" id="result-state">
+          <div class="empty-state">
+            <strong>No analysis yet</strong>
+            <span>Select a case from the top bar or run a new scan.</span>
+          </div>
+        </section>
+      </div>
+
+      <template id="result-template">
+        <div class="results-dash">
+          <div class="summary-row">
+            <div id="verdict-banner" class="verdict-banner compact">
+              <div class="banner-left">
+                <div class="banner-icon" id="banner-icon"></div>
+                <div>
+                  <div class="banner-verdict" id="banner-verdict-text"></div>
+                  <div class="banner-file" id="banner-file"></div>
+                  <div class="signal-pills" id="signal-pills" style="margin-top:8px"></div>
+                </div>
+              </div>
+              <div class="banner-right">
+                <button class="btn-export" id="download-report" type="button">Export JSON</button>
+                <div class="banner-score">
+                  <div class="score-big" id="score-big"></div>
+                  <div class="score-label">/ 10 phishing score</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="summary-card">
+              <div class="risk-panel compact">
+                <div class="risk-header">
+                  <strong>Risk meter</strong>
+                  <span class="risk-score-label" id="risk-score-label"></span>
+                </div>
+                <div class="risk-track">
+                  <div class="risk-bar" id="risk-bar"></div>
+                </div>
+                <div class="risk-ticks">
+                  <span class="risk-tick">0</span><span class="risk-tick">2</span>
+                  <span class="risk-tick">4</span><span class="risk-tick">6</span>
+                  <span class="risk-tick">8</span><span class="risk-tick">10</span>
+                </div>
+              </div>
+
+              <div class="vt-inline">
+                <div>
+                  <div class="vt-inline-title" id="vt-title">VirusTotal Summary</div>
+                  <div class="vt-inline-sub">Scan coverage and alerts</div>
+                </div>
+                <div class="vt-summary compact" id="vt-summary"></div>
+              </div>
+              <div class="vt-inline" id="urlscan-row" style="display:none">
+                <div>
+                  <div class="vt-inline-title" id="urlscan-title">urlscan.io Analysis</div>
+                  <div class="vt-inline-sub">URL reputation, screenshots, DOM & network analysis</div>
+                </div>
+                <div class="vt-summary compact" id="urlscan-summary"></div>
+              </div>
+              <div id="urlscan-details" style="display:none;margin-top:16px"></div>
+              <div id="urlscan-search-results" style="display:none;margin-top:16px"></div>
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <h3>Key Findings</h3>
+            <div class="finding-head">
+              <span>Signal</span>
+              <span>Evidence</span>
+              <span>Detail</span>
+            </div>
+            <div class="finding-list" id="feedback-list"></div>
+          </div>
+
+          <div class="detail-card">
+            <h3>Authentication</h3>
+            <div class="auth-grid" id="auth-grid"></div>
+            <div style="margin-top:16px">
+              <div class="kv-table" id="sender-table"></div>
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <h3>Received Path</h3>
+            <div class="timeline" id="received-path"></div>
+          </div>
+
+          <div class="detail-card" id="spoof-panel">
+            <h3>Domain / Spoofing Signals</h3>
+            <p class="panel-help">Shows homograph or punycode tricks and the normalized sender domain.</p>
+            <div class="info-list" id="spoof-list"></div>
+          </div>
+
+          <div class="detail-card" id="content-panel">
+            <h3>Content Findings</h3>
+            <p class="panel-help">Summarizes scripts, forms, hidden elements, and redirect hints in the HTML body.</p>
+            <div class="info-list" id="content-findings"></div>
+          </div>
+
+          <div class="detail-card">
+            <h3>URLs Detected</h3>
+            <div class="data-table-wrap">
+              <div id="url-table"></div>
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <h3>Attachments</h3>
+            <div class="data-table-wrap">
+              <div id="attachment-table"></div>
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <h3>Technical Observables (IOCs)</h3>
+            <div class="ioc-section" id="ioc-list"></div>
+          </div>
+
+        </div>
+      </template>
+    </section><!-- /analysis -->
+
+  </main>
+</div>
+
+<div class="modal-backdrop" id="analysis-modal" aria-hidden="true">
+  <div class="modal-shell modal-small" role="dialog" aria-modal="true" aria-label="Phishing analysis">
+    <header class="modal-header">
+      <div>
+        <div class="modal-kicker">Investigation</div>
+        <div class="modal-title">Upload and manage cases</div>
+        <div class="modal-sub">Run a new scan or reopen a previous analysis.</div>
+      </div>
+      <div class="modal-controls">
+        <button class="btn-secondary" id="close-modal" type="button">Close</button>
+      </div>
+    </header>
+    <div class="modal-body">
+      <div class="modal-grid single">
+        <div class="upload-panel">
+          <p class="section-label">Upload</p>
+          <h2 style="margin-bottom:6px">Select an email file</h2>
+          <p style="margin-bottom:18px">Analyze <code>.eml</code> files for spoofing, authentication failures, malicious URLs, risky attachments, and technical IOCs.</p>
+
+          <form id="analysis-form" autocomplete="off">
+            <label class="drop-zone" id="drop-zone" for="email-file">
+              <input id="email-file" name="email_file" type="file" accept=".eml,message/rfc822">
+              <div class="drop-icon">📧</div>
+              <strong>Drop an .eml file here</strong>
+              <span>or click to select</span>
+            </label>
+
+            <div class="selected-file" id="selected-file">No file selected</div>
+
+            <div class="option-row">
+              <label class="check-option">
+                <input type="checkbox" id="external-enrichment" name="external_enrichment" checked>
+                <span>Enable external enrichment (domain age, VirusTotal)</span>
+              </label>
+              <label class="check-option">
+                <input type="checkbox" id="resolve-redirects" name="resolve_redirects" checked>
+                <span>Resolve URL redirect chains</span>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn-primary" type="submit">Run Analysis</button>
+              <button class="btn-secondary" id="reset-button" type="button">Reset</button>
+            </div>
+            <div class="modal-status" id="modal-status" aria-live="polite"></div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
